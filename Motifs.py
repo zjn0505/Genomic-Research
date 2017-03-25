@@ -101,3 +101,79 @@ def GreedyMotifSearch(Dna, k, t):
         if Score(Motifs) < Score(BestMotifs):
             BestMotifs = Motifs
     return BestMotifs
+
+# Input:  A list of kmers Dna, and integers k and t (where t is the number of kmers in Dna)
+# Output: GreedyMotifSearch(Dna, k, t)
+def GreedyMotifSearchWithPseudocounts(Dna, k, t):
+    BestMotifs = []
+    for i in range(0, t):
+        BestMotifs.append(Dna[i][0:k])
+    n = len(Dna[0])
+    for i in range(n-k+1):
+        Motifs = []
+        Motifs.append(Dna[0][i:i+k])
+        for j in range(1, t):
+            P = ProfileWithPseudocounts(Motifs[0:j])
+            Motifs.append(ProfileMostProbablePattern(Dna[j], k, P))
+        if ScoreWithPseudocounts(Motifs) < ScoreWithPseudocounts(BestMotifs):
+            BestMotifs = Motifs
+    return BestMotifs
+
+# Add base 1 instead of 0 to every count, to prevent 0 in probililty.
+# Input:  A set of kmers Motifs
+# Output: CountWithPseudocounts(Motifs)
+def CountWithPseudocounts(Motifs):
+    count = {} 
+    t = len(Motifs)
+    k = len(Motifs[0])
+    for symbol in "ACGT":
+        count[symbol] = []
+        for j in range(k):
+             count[symbol].append(1)
+    for i in range(t):
+        for j in range(k):
+            symbol = Motifs[i][j]
+            count[symbol][j] += 1
+    return count
+
+# Input:  A set of kmers Motifs
+# Output: A consensus string of Motifs.
+def ConsensusWithPseudocounts(Motifs):
+    k = len(Motifs[0])
+    count = CountWithPseudocounts(Motifs)
+    consensus = ""
+    for j in range(k):
+        m = 0
+        frequentSymbol = ""
+        for symbol in "ACGT":
+            if count[symbol][j] > m:
+                m = count[symbol][j]
+                frequentSymbol = symbol
+        consensus += frequentSymbol
+    return consensus
+
+# Input:  A set of k-mers Motifs
+# Output: The score of these k-mers.
+def ScoreWithPseudocounts(Motifs):
+    count = CountWithPseudocounts(Motifs)
+    consensus = ConsensusWithPseudocounts(Motifs)
+    score = 0
+    k = len(consensus)
+    for i in range(k):
+        for symbol in "ACGT":
+            if symbol != consensus[i]:
+                score += count[symbol][i]
+    return score
+
+# Input:  A set of kmers Motifs
+# Output: ProfileWithPseudocounts(Motifs)
+def ProfileWithPseudocounts(Motifs):
+    t = len(Motifs)
+    k = len(Motifs[0])
+    profile = {} # output variable
+    count = CountWithPseudocounts(Motifs)
+    for symbol in "ACGT":
+        profile[symbol] = []
+        for j in range(k):
+            profile[symbol].append(count[symbol][j] / (t + 4))
+    return profile
