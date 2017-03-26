@@ -25,7 +25,7 @@ def Profile(Motifs):
     for symbol in "ACGT":
         profile[symbol] = []
         for j in range(k):
-            profile[symbol].append(count[symbol][j] / t)
+            profile[symbol].append(count[symbol][j] / float(t))
     return profile
     
     
@@ -175,5 +175,40 @@ def ProfileWithPseudocounts(Motifs):
     for symbol in "ACGT":
         profile[symbol] = []
         for j in range(k):
-            profile[symbol].append(count[symbol][j] / (t + 4))
+            profile[symbol].append(count[symbol][j] / float(t + 4))
     return profile
+
+# Given Profile, find the Motif matrix from Dna
+# Input:  A profile matrix Profile and a list of strings Dna
+# Output: Motifs(Profile, Dna)
+def Motifs(Profile, Dna):
+    results = []
+    profileLen = len(Profile['A'])
+    for dnaEntity in Dna:
+        result = ProfileMostProbablePattern(dnaEntity, profileLen, Profile)
+        results.append(result)
+    return results
+
+# Input:  A list of strings Dna, and integers k and t
+# Output: RandomMotifs(Dna, k, t)
+def RandomMotifs(Dna, k, t):
+    results = []
+    for i in range(0, t):
+        rnd = random.randint(0, len(Dna[0])-k)
+        result = Dna[i][rnd:rnd+k]
+        results.append(result)
+    return results
+
+# Loop through a random motif to produce best motif
+# Input:  Positive integers k and t, followed by a list of strings Dna
+# Output: RandomizedMotifSearch(Dna, k, t)
+def RandomizedMotifSearch(Dna, k, t):
+    M = RandomMotifs(Dna, k, t)
+    BestMotifs = M
+    while True:
+        Profile = ProfileWithPseudocounts(M)
+        M = Motifs(Profile, Dna)
+        if ScoreWithPseudocounts(M) < ScoreWithPseudocounts(BestMotifs):
+            BestMotifs = M
+        else:
+            return BestMotifs
